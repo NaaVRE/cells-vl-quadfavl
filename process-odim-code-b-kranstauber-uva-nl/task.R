@@ -132,7 +132,7 @@ dir.create(file.path(conf_local_vp_dir), showWarnings = FALSE)
 
 v2bversion <- format_v2b_version(vol2birdR::vol2bird_version())
 
-wmocode <- getRad::weather_radars() |>
+wmocode <- getRad::get_weather_radars() |>
   filter(odimcode == odimclean, status==1) |>
   pull(wmocode)
 
