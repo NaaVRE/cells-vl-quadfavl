@@ -86,9 +86,9 @@ print("Running the cell")
 library("getRad")
 library("tidyr")
 library("dplyr")
+param_country<-"Germany"
 
-
-odimcodes <- getRad::weather_radars() |>
+odimcodes <- getRad::get_weather_radars() |>
     dplyr::filter(
         country == param_country, status == 1
     ) |>
