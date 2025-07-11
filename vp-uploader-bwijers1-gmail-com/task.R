@@ -85,10 +85,10 @@ print(paste("Variable vp_paths has length", var_len))
 vp_paths <- gsub("\"", "", opt$vp_paths)
 id <- gsub('"', '', opt$id)
 
+{'name': 'conf_de_time_interval', 'assignation': 'conf_de_time_interval<-"720 mins"'}
 {'name': 'conf_minio_endpoint', 'assignation': 'conf_minio_endpoint<-"scruffy.lab.uvalight.net:9000"'}
 {'name': 'conf_local_vp_dir', 'assignation': 'conf_local_vp_dir<-"/tmp/data/vp"'}
 {'name': 'conf_de_max_days', 'assignation': 'conf_de_max_days<-3'}
-{'name': 'conf_de_time_interval', 'assignation': 'conf_de_time_interval<-"720 mins"'}
 
 print("Running the cell")
 print("dput")
