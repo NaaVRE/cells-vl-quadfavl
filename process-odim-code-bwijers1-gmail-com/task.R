@@ -85,6 +85,10 @@ print(paste("Variable odimcode has length", var_len))
 odimcode <- gsub("\"", "", opt$odimcode)
 id <- gsub('"', '', opt$id)
 
+{'name': 'conf_de_time_interval', 'assignation': 'conf_de_time_interval<-"720 mins"'}
+{'name': 'conf_minio_endpoint', 'assignation': 'conf_minio_endpoint<-"scruffy.lab.uvalight.net:9000"'}
+{'name': 'conf_local_vp_dir', 'assignation': 'conf_local_vp_dir<-"/tmp/data/vp"'}
+{'name': 'conf_de_max_days', 'assignation': 'conf_de_max_days<-3'}
 
 print("Running the cell")
 print(odimcode)
