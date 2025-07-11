@@ -90,7 +90,7 @@ library("dplyr")
 
 odimcodes <- getRad::weather_radars() |>
     dplyr::filter(
-        country == param_country, status == 1
+        country == "Germany", status == 1
     ) |>
     dplyr::pull(`odimcode`)
 odimcodes <- (odimcodes[1:3])
