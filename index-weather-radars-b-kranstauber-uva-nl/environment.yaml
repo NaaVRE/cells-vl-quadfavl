@@ -5,10 +5,10 @@ dependencies:
   - pip
   - python>=3.8
   - nbconvert
-  - r-stringr
-  - r-dplyr
   - r-tidyr
+  - r-dplyr
   - r-purrr
   - r-jsonlite
+  - r-stringr
   - papermill
   - ipykernel
