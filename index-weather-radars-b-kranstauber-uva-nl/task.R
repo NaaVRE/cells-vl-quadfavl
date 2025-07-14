@@ -18,6 +18,14 @@ if (!requireNamespace("bioRad", quietly = TRUE)) {
 	install.packages("bioRad", repos="http://cran.us.r-project.org")
 }
 library(bioRad)
+if (!requireNamespace("glue", quietly = TRUE)) {
+	install.packages("glue", repos="http://cran.us.r-project.org")
+}
+library(glue)
+if (!requireNamespace("lubridate", quietly = TRUE)) {
+	install.packages("lubridate", repos="http://cran.us.r-project.org")
+}
+library(lubridate)
 if (!requireNamespace("purrr", quietly = TRUE)) {
 	install.packages("purrr", repos="http://cran.us.r-project.org")
 }
@@ -86,9 +94,9 @@ print("Running the cell")
 library("getRad")
 library("tidyr")
 library("dplyr")
-param_country<-"Germany"
 
-odimcodes <- getRad::get_weather_radars() |>
+
+odimcodes <- getRad::weather_radars() |>
     dplyr::filter(
         country == param_country, status == 1
     ) |>
