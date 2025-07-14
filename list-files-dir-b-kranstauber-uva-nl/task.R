@@ -1,0 +1,64 @@
+setwd('/app')
+library(optparse)
+library(jsonlite)
+
+
+
+
+print('option_list')
+option_list = list(
+
+make_option(c("--bb"), action="store", default=NA, type="character", help="my description"),
+make_option(c("--id"), action="store", default=NA, type="character", help="task id")
+)
+
+
+opt = parse_args(OptionParser(option_list=option_list))
+
+var_serialization <- function(var){
+    if (is.null(var)){
+        print("Variable is null")
+        exit(1)
+    }
+    tryCatch(
+        {
+            var <- fromJSON(var)
+            print("Variable deserialized")
+            return(var)
+        },
+        error=function(e) {
+            print("Error while deserializing the variable")
+            print(var)
+            var <- gsub("'", '"', var)
+            var <- fromJSON(var)
+            print("Variable deserialized")
+            return(var)
+        },
+        warning=function(w) {
+            print("Warning while deserializing the variable")
+            var <- gsub("'", '"', var)
+            var <- fromJSON(var)
+            print("Variable deserialized")
+            return(var)
+        }
+    )
+}
+
+print("Retrieving bb")
+var = opt$bb
+print(var)
+var_len = length(var)
+print(paste("Variable bb has length", var_len))
+
+bb <- gsub("\"", "", opt$bb)
+id <- gsub('"', '', opt$id)
+
+
+print("Running the cell")
+dput(aa<-list.files(bb))
+aa
+# capturing outputs
+print('Serialization of aa')
+file <- file(paste0('/tmp/aa_', id, '.json'))
+writeLines(toJSON(aa, auto_unbox=TRUE), file)
+close(file)
