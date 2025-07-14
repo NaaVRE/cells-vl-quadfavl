@@ -47,7 +47,7 @@ id <- gsub('"', '', opt$id)
 
 
 print("Running the cell")
-dput(aa<-list.files())
+dput(aa<-list.files("../"))
 aa
 # capturing outputs
 print('Serialization of aa')
