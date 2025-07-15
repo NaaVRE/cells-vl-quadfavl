@@ -42,6 +42,14 @@ if (!requireNamespace("aws.s3", quietly = TRUE)) {
 	install.packages("aws.s3", repos="http://cran.us.r-project.org")
 }
 library(aws.s3)
+if (!requireNamespace("magrittr", quietly = TRUE)) {
+	install.packages("magrittr", repos="http://cran.us.r-project.org")
+}
+library(magrittr)
+if (!requireNamespace("tibble", quietly = TRUE)) {
+	install.packages("tibble", repos="http://cran.us.r-project.org")
+}
+library(tibble)
 if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
@@ -138,7 +146,7 @@ for (vp_path in vp_paths){
   delimiter = "/",
   use_https = T,
   check_region = F,
-  verbose = TRUE,
+  verbose = FALSE,
 
   
 ) 
