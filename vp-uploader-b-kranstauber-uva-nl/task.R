@@ -118,7 +118,7 @@ vp_paths<-gsub(' |\\[|\\]','',strsplit(vp_paths,',')[[1]])
 cli::cli_h3("{.arg vp_paths} after cleaning")
 dput(vp_paths)
 if(length(vp_paths)!=1 || vp_paths!=""){
-
+vp_paths<-paste0("/tmp/data/vp/hdf5/", vp_paths)
 Sys.setenv(
   AWS_ACCESS_KEY_ID = secret_minio_key,
   AWS_SECRET_ACCESS_KEY = secret_minio_secret,
@@ -149,3 +149,9 @@ for (vp_path in vp_paths){
 }
 cli::cli_process_done()
 }
+dummy<-"TRUE"
+# capturing outputs
+print('Serialization of dummy')
+file <- file(paste0('/tmp/dummy_', id, '.json'))
+writeLines(toJSON(dummy, auto_unbox=TRUE), file)
+close(file)
