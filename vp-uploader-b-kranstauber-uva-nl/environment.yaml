@@ -6,6 +6,7 @@ dependencies:
   - python>=3.8
   - nbconvert
   - r-lubridate
+  - r-httr
   - r-tidyr
   - r-cli
   - r-dplyr

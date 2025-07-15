@@ -42,6 +42,10 @@ if (!requireNamespace("aws.s3", quietly = TRUE)) {
 	install.packages("aws.s3", repos="http://cran.us.r-project.org")
 }
 library(aws.s3)
+if (!requireNamespace("httr", quietly = TRUE)) {
+	install.packages("httr", repos="http://cran.us.r-project.org")
+}
+library(httr)
 if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
@@ -118,7 +122,7 @@ cli::cli_progress_bar( format = paste0(
   "[{pb_current}/{pb_total}]   ETA:{pb_eta}"
 ), total = length(vp_paths), extra=list(object=""))
 for (vp_path in vp_paths){
-        object<-sub(paste0(conff_local_vp_dir,'/'),'vl-vol2bird/',vp_path)  
+        object<-sub(paste0(conff_local_vp_dir,'/'),'vl-vol2bird/quadfavl/',vp_path)  
       cli::cli_progress_update(extra=list(object=object))
     aws.s3::put_object(file=vp_path,
   bucket = "naa-vre-public",
