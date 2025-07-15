@@ -7,6 +7,7 @@ dependencies:
   - nbconvert
   - r-lubridate
   - r-tidyr
+  - r-cli
   - r-dplyr
   - r-glue
   - r-purrr

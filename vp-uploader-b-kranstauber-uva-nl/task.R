@@ -14,6 +14,10 @@ if (!requireNamespace("tidyr", quietly = TRUE)) {
 	install.packages("tidyr", repos="http://cran.us.r-project.org")
 }
 library(tidyr)
+if (!requireNamespace("cli", quietly = TRUE)) {
+	install.packages("cli", repos="http://cran.us.r-project.org")
+}
+library(cli)
 if (!requireNamespace("bioRad", quietly = TRUE)) {
 	install.packages("bioRad", repos="http://cran.us.r-project.org")
 }
@@ -96,7 +100,7 @@ dput(vp_paths)
 
 
 print("for loop")
-for (vp_path in aa){
+for (vp_path in vp_paths){
     print(vp_path)
     print(file.exists(vp_path))
 }
