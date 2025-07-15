@@ -6,6 +6,7 @@ dependencies:
   - python>=3.8
   - nbconvert
   - r-lubridate
+  - r-httr
   - r-tidyr
   - r-magrittr
   - r-cli
@@ -16,5 +17,6 @@ dependencies:
   - r-jsonlite
   - r-stringr
   - r-tibble
+  - r-SecretsProvider
   - papermill
   - ipykernel
