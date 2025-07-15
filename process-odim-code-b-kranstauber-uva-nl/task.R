@@ -18,6 +18,14 @@ if (!requireNamespace("bioRad", quietly = TRUE)) {
 	install.packages("bioRad", repos="http://cran.us.r-project.org")
 }
 library(bioRad)
+if (!requireNamespace("glue", quietly = TRUE)) {
+	install.packages("glue", repos="http://cran.us.r-project.org")
+}
+library(glue)
+if (!requireNamespace("lubridate", quietly = TRUE)) {
+	install.packages("lubridate", repos="http://cran.us.r-project.org")
+}
+library(lubridate)
 if (!requireNamespace("purrr", quietly = TRUE)) {
 	install.packages("purrr", repos="http://cran.us.r-project.org")
 }
@@ -26,10 +34,6 @@ if (!requireNamespace("stringr", quietly = TRUE)) {
 	install.packages("stringr", repos="http://cran.us.r-project.org")
 }
 library(stringr)
-if (!requireNamespace("vol2birdR", quietly = TRUE)) {
-	install.packages("vol2birdR", repos="http://cran.us.r-project.org")
-}
-library(vol2birdR)
 if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
@@ -85,19 +89,15 @@ print(paste("Variable odimcode has length", var_len))
 odimcode <- gsub("\"", "", opt$odimcode)
 id <- gsub('"', '', opt$id)
 
-{'name': 'conf_minio_endpoint', 'assignation': 'conf_minio_endpoint<-"scruffy.lab.uvalight.net:9000"'}
-{'name': 'conf_local_vp_dir', 'assignation': 'conf_local_vp_dir<-"/tmp/data/vp"'}
-{'name': 'conf_de_max_days', 'assignation': 'conf_de_max_days<-3'}
-{'name': 'conf_de_time_interval', 'assignation': 'conf_de_time_interval<-"720 mins"'}
 
 print("Running the cell")
-print(odimcode)
-print(dput(odimcode))
-odimclean<-sub('\\]','',sub('\\[','',odimcode))
+dput(odimcode)
 library("getRad")
 library("tidyr")
 library("dplyr")
 library("bioRad")
+library("glue")
+library("lubridate")
 stopifnot(length(odimclean)==1)
 format_v2b_version <- function(vol2bird_version) {
   v2b_version_formatted <- gsub(".", "-", vol2bird_version, fix = TRUE)
@@ -127,28 +127,28 @@ generate_vp_file_name <- function(odimcode, times, wmocode, v2bversion) {
   print(filename)
   return(filename)
 }
+conff_local_vp_dir <- "/tmp/data/vp"
+conff_de_time_interval <- "720 mins"
+conff_de_max_days <- 3
 
-dir.create(file.path(conf_local_vp_dir), showWarnings = FALSE)
+dir.create(file.path(conff_local_vp_dir), showWarnings = FALSE)
 
-v2bversion <- format_v2b_version(vol2birdR::vol2bird_version())
 
-wmocode <- getRad::get_weather_radars() |>
-  filter(odimcode == odimclean, status==1) |>
-  pull(wmocode)
 
-t<-seq(as.POSIXct(Sys.Date() - 1), as.POSIXct(Sys.Date()), conf_de_time_interval)
+t<-seq(as.POSIXct(Sys.Date() - 1), as.POSIXct(Sys.Date()), conff_de_time_interval)
 print(t)
-print("wmo")
-print(wmocode)
 
-res<-expand_grid(odim=unlist(odimclean), times = t) |>
-  expand_grid(wmocode = wmocode) |>
-  expand_grid(v2bversion = v2bversion) |>
-  mutate(file = file.path(conf_local_vp_dir, generate_vp_file_name(odim, times, wmocode, v2bversion)),
-         vp = purrr::pmap(
-    list(odim, times, file),
-    ~ calculate_vp(calculate_param(getRad::get_pvol(..1, ..2), RHOHV = urhohv), vpfile = ..3)
-  ) ) 
+expand_grid(odim=unlist(odimcode), times = t) |>
+  mutate(
+      times_utc=with_tz(times,'UTC'),
+      filename=glue::glue("{odim}_vp_{strftime(times_utc, '%Y%m%dT%H%M%SZ_0xb.h5')}"),
+      hdf5_dirpath=glue::glue("hdf5/{odim}/{strftime(times_utc, '%Y/%m/%d')}/"),
+      local_path=file.path(conff_local_vp_dir,hdf5_dirpath,filename),
+      vp = purrr::pmap(
+    list(odim, times, local_path),
+    ~ list(try(calculate_vp(calculate_param(getRad::get_pvol(..1, ..2), RHOHV = urhohv), vpfile = ..3)))
+  )
+  )
 print(res)
 vp_paths <- (res$file)
 # capturing outputs
