@@ -14,6 +14,10 @@ if (!requireNamespace("tidyr", quietly = TRUE)) {
 	install.packages("tidyr", repos="http://cran.us.r-project.org")
 }
 library(tidyr)
+if (!requireNamespace("cli", quietly = TRUE)) {
+	install.packages("cli", repos="http://cran.us.r-project.org")
+}
+library(cli)
 if (!requireNamespace("bioRad", quietly = TRUE)) {
 	install.packages("bioRad", repos="http://cran.us.r-project.org")
 }
@@ -91,7 +95,13 @@ id <- gsub('"', '', opt$id)
 
 
 print("Running the cell")
+cli::cli_h3("{.arg odimcode} before cleaning")
 dput(odimcode)
+
+odimcode<-gsub('\\[|\\]','', odimcode)
+cli::cli_h3("{.arg odimcode} after cleaning")
+dput(odimcode)
+
 library("getRad")
 library("tidyr")
 library("dplyr")
