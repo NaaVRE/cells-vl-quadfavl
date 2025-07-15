@@ -38,6 +38,14 @@ if (!requireNamespace("stringr", quietly = TRUE)) {
 	install.packages("stringr", repos="http://cran.us.r-project.org")
 }
 library(stringr)
+if (!requireNamespace("aws.s3", quietly = TRUE)) {
+	install.packages("aws.s3", repos="http://cran.us.r-project.org")
+}
+library(aws.s3)
+if (!requireNamespace("jsonlite", quietly = TRUE)) {
+	install.packages("jsonlite", repos="http://cran.us.r-project.org")
+}
+library(jsonlite)
 
 
 secret_minio_key = Sys.getenv('secret_minio_key')
@@ -111,10 +119,7 @@ cli::cli_progress_bar( format = paste0(
 ), total = length(vp_paths), extra=list(object=""))
 for (vp_path in vp_paths){
         object<-sub(paste0(conff_local_vp_dir,'/'),'vl-vol2bird/',vp_path)  
-
-      cli::cli_progress_update(extra=list(object=object)
-
-
+      cli::cli_progress_update(extra=list(object=object))
     aws.s3::put_object(file=vp_path,
   bucket = "naa-vre-public",
                  object=  object,  
