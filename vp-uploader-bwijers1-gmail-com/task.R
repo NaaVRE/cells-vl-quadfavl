@@ -2,6 +2,10 @@ setwd('/app')
 library(optparse)
 library(jsonlite)
 
+if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
+	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
+}
+library(SecretsProvider)
 if (!requireNamespace("dplyr", quietly = TRUE)) {
 	install.packages("dplyr", repos="http://cran.us.r-project.org")
 }
@@ -36,6 +40,8 @@ if (!requireNamespace("jsonlite", quietly = TRUE)) {
 library(jsonlite)
 
 
+secret_minio_access_key = Sys.getenv('secret_minio_access_key')
+secret_minio_secret_key = Sys.getenv('secret_minio_secret_key')
 
 print('option_list')
 option_list = list(
@@ -92,6 +98,9 @@ id <- gsub('"', '', opt$id)
 
 print("Running the cell")
 print("dput")
+print(secret_minio_access_key)
+print(secret_minio_secret_key)
+
 library("jsonlite")
 dput(vp_paths)
 
