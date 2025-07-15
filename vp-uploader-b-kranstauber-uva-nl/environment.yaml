@@ -16,6 +16,5 @@ dependencies:
   - r-jsonlite
   - r-stringr
   - r-tibble
-  - r-SecretsProvider
   - papermill
   - ipykernel

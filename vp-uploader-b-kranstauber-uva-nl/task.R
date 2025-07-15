@@ -14,6 +14,10 @@ if (!requireNamespace("tidyr", quietly = TRUE)) {
 	install.packages("tidyr", repos="http://cran.us.r-project.org")
 }
 library(tidyr)
+if (!requireNamespace("aws.s3", quietly = TRUE)) {
+	install.packages("aws.s3", repos="http://cran.us.r-project.org")
+}
+library(aws.s3)
 if (!requireNamespace("bioRad", quietly = TRUE)) {
 	install.packages("bioRad", repos="http://cran.us.r-project.org")
 }
@@ -30,6 +34,10 @@ if (!requireNamespace("lubridate", quietly = TRUE)) {
 	install.packages("lubridate", repos="http://cran.us.r-project.org")
 }
 library(lubridate)
+if (!requireNamespace("magrittr", quietly = TRUE)) {
+	install.packages("magrittr", repos="http://cran.us.r-project.org")
+}
+library(magrittr)
 if (!requireNamespace("purrr", quietly = TRUE)) {
 	install.packages("purrr", repos="http://cran.us.r-project.org")
 }
@@ -38,14 +46,6 @@ if (!requireNamespace("stringr", quietly = TRUE)) {
 	install.packages("stringr", repos="http://cran.us.r-project.org")
 }
 library(stringr)
-if (!requireNamespace("aws.s3", quietly = TRUE)) {
-	install.packages("aws.s3", repos="http://cran.us.r-project.org")
-}
-library(aws.s3)
-if (!requireNamespace("magrittr", quietly = TRUE)) {
-	install.packages("magrittr", repos="http://cran.us.r-project.org")
-}
-library(magrittr)
 if (!requireNamespace("tibble", quietly = TRUE)) {
 	install.packages("tibble", repos="http://cran.us.r-project.org")
 }
@@ -54,10 +54,6 @@ if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
 library(jsonlite)
-if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
-	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
-}
-library(SecretsProvider)
 
 
 secret_minio_key = Sys.getenv('secret_minio_key')
@@ -121,7 +117,7 @@ vp_paths<-gsub(' |\\[|\\]','',strsplit(vp_paths,',')[[1]])
 
 cli::cli_h3("{.arg vp_paths} after cleaning")
 dput(vp_paths)
-
+if(vp_paths!=""){
 
 Sys.setenv(
   AWS_ACCESS_KEY_ID = secret_minio_key,
@@ -142,7 +138,7 @@ for (vp_path in vp_paths){
       cli::cli_progress_update(extra=list(object=object))
     aws.s3::put_object(file=vp_path,
   bucket = "naa-vre-public",
-                 object=(object),
+                 object=object,
   delimiter = "/",
   use_https = T,
   check_region = F,
@@ -153,3 +149,4 @@ for (vp_path in vp_paths){
    
 }
 cli::cli_process_done()
+}
