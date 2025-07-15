@@ -83,7 +83,8 @@ id <- gsub('"', '', opt$id)
 
 
 print("Running the cell")
-pparam_county<-"Germany"
+pparam_country<-"Germany"
+dput(pparam_country)
 library("getRad")
 library("tidyr")
 library("dplyr")
