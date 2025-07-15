@@ -46,6 +46,10 @@ if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
 library(jsonlite)
+if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
+	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
+}
+library(SecretsProvider)
 
 
 secret_minio_key = Sys.getenv('secret_minio_key')
@@ -180,7 +184,7 @@ group_walk(~{dir.create(file.path(conff_local_vp_dir, .y$hdf5_dirpath), recursiv
   key = secret_minio_key,
   secret = secret_minio_secret
   ) |> purrr::map_chr(~.x$Key) |> basename() -> existing_files
-    .x %>% tibble::add_column(file_exists=filename %in% existing_files)
+    .x %>% tibble::add_column(file_exists=.x$filename %in% existing_files)
   }) |>
 ungroup()
 %T>% {x<-.;cli::cli_inform("Out of {nrow(x)} files {sum(x$file_exists)} already exist")} 

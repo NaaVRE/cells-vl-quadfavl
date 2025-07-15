@@ -14,5 +14,6 @@ dependencies:
   - r-purrr
   - r-jsonlite
   - r-stringr
+  - r-SecretsProvider
   - papermill
   - ipykernel
