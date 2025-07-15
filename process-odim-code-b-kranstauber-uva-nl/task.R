@@ -192,7 +192,7 @@ group_walk(~{dir.create(file.path(conff_local_vp_dir, .y$hdf5_dirpath), recursiv
   }) |>
 ungroup()%T>% {x<-.;cli::cli_inform("Out of {nrow(x)} files {sum(x$file_exists)} already exist")} |> 
 filter(!file_exists)|>
-head(20) |>
+head(50) |>
 mutate(
       vp = purrr::pmap(
     list(odim, times, local_path),
