@@ -117,7 +117,7 @@ vp_paths<-gsub(' |\\[|\\]','',strsplit(vp_paths,',')[[1]])
 
 cli::cli_h3("{.arg vp_paths} after cleaning")
 dput(vp_paths)
-if(vp_paths!=""){
+if(length(vp_paths)!=1 || vp_paths!=""){
 
 Sys.setenv(
   AWS_ACCESS_KEY_ID = secret_minio_key,
