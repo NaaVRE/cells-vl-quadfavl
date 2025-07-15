@@ -98,7 +98,7 @@ library("dplyr")
 library("bioRad")
 library("glue")
 library("lubridate")
-stopifnot(length(odimclean)==1)
+stopifnot(length(odimcode)==1)
 format_v2b_version <- function(vol2bird_version) {
   v2b_version_formatted <- gsub(".", "-", vol2bird_version, fix = TRUE)
   v2b_version_parts <- stringr:::str_split(v2b_version_formatted, pattern = "-")
@@ -137,13 +137,15 @@ dir.create(file.path(conff_local_vp_dir), showWarnings = FALSE)
 
 t<-seq(as.POSIXct(Sys.Date() - 1), as.POSIXct(Sys.Date()), conff_de_time_interval)
 print(t)
+conff_minio_endpoint <- "scruffy.lab.uvalight.net:9000"
 
 expand_grid(odim=unlist(odimcode), times = t) |>
   mutate(
       times_utc=with_tz(times,'UTC'),
       filename=glue::glue("{odim}_vp_{strftime(times_utc, '%Y%m%dT%H%M%SZ_0xb.h5')}"),
       hdf5_dirpath=glue::glue("hdf5/{odim}/{strftime(times_utc, '%Y/%m/%d')}/"),
-      local_path=file.path(conff_local_vp_dir,hdf5_dirpath,filename),
+      local_path=file.path(conff_local_vp_dir,hdf5_dirpath,filename))|>
+mutate(
       vp = purrr::pmap(
     list(odim, times, local_path),
     ~ list(try(calculate_vp(calculate_param(getRad::get_pvol(..1, ..2), RHOHV = urhohv), vpfile = ..3)))
