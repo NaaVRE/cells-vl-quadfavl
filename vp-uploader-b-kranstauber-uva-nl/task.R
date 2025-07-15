@@ -129,13 +129,12 @@ Sys.setenv(
 conff_local_vp_dir <- "/tmp/data/vp"
 
 cli::cli_progress_bar( format = paste0(
-  "{pb_spin} Uploading {.path {basename(vp_path)}} ({object})",
+  "{pb_spin} Uploading {.path {basename(vp_path)}}",
   "[{pb_current}/{pb_total}]   ETA:{pb_eta}"
-), total = length(vp_paths), extra=list(object=""))
+), total = length(vp_paths))
 for (vp_path in vp_paths){
         object<-sub(paste0(conff_local_vp_dir,'/'),'vl-vol2bird/quadfavl/',vp_path)  
-    print(object)
-      cli::cli_progress_update(extra=list(object=object))
+      cli::cli_progress_update()
     aws.s3::put_object(file=vp_path,
   bucket = "naa-vre-public",
                  object=object,
