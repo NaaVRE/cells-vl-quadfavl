@@ -106,17 +106,14 @@ dput(vp_paths)
 conff_local_vp_dir <- "/tmp/data/vp"
 
 cli::cli_progress_bar( format = paste0(
-  "{pb_spin} Uploading {.path {basename(vp_path)}} ",
+  "{pb_spin} Uploading {.path {basename(vp_path)}} ({object})",
   "[{pb_current}/{pb_total}]   ETA:{pb_eta}"
-), total = length(vp_paths)
+), total = length(vp_paths), extra=list(object=""))
 for (vp_path in vp_paths){
-      cli::cli_progress_update()
+        object<-sub(paste0(conff_local_vp_dir,'/'),'vl-vol2bird/',vp_path)  
 
-     print(vp_path)
-    print(file.exists(vp_path))
-    cli::cli_inform("Uploading:  {vp_path}")
-    object<-sub(paste0(conff_local_vp_dir,'/'),'',vp_path)  
-        cli::cli_inform("Object:  {object}")
+      cli::cli_progress_update(extra=list(object=object)
+
 
     aws.s3::put_object(file=vp_path,
   bucket = "naa-vre-public",
