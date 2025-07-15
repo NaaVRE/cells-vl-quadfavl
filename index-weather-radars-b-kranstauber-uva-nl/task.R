@@ -14,10 +14,18 @@ if (!requireNamespace("tidyr", quietly = TRUE)) {
 	install.packages("tidyr", repos="http://cran.us.r-project.org")
 }
 library(tidyr)
+if (!requireNamespace("aws.s3", quietly = TRUE)) {
+	install.packages("aws.s3", repos="http://cran.us.r-project.org")
+}
+library(aws.s3)
 if (!requireNamespace("bioRad", quietly = TRUE)) {
 	install.packages("bioRad", repos="http://cran.us.r-project.org")
 }
 library(bioRad)
+if (!requireNamespace("cli", quietly = TRUE)) {
+	install.packages("cli", repos="http://cran.us.r-project.org")
+}
+library(cli)
 if (!requireNamespace("glue", quietly = TRUE)) {
 	install.packages("glue", repos="http://cran.us.r-project.org")
 }
@@ -26,6 +34,10 @@ if (!requireNamespace("lubridate", quietly = TRUE)) {
 	install.packages("lubridate", repos="http://cran.us.r-project.org")
 }
 library(lubridate)
+if (!requireNamespace("magrittr", quietly = TRUE)) {
+	install.packages("magrittr", repos="http://cran.us.r-project.org")
+}
+library(magrittr)
 if (!requireNamespace("purrr", quietly = TRUE)) {
 	install.packages("purrr", repos="http://cran.us.r-project.org")
 }
@@ -34,6 +46,10 @@ if (!requireNamespace("stringr", quietly = TRUE)) {
 	install.packages("stringr", repos="http://cran.us.r-project.org")
 }
 library(stringr)
+if (!requireNamespace("tibble", quietly = TRUE)) {
+	install.packages("tibble", repos="http://cran.us.r-project.org")
+}
+library(tibble)
 if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
@@ -95,7 +111,7 @@ odimcodes <- getRad::get_weather_radars() |>
         country == pparam_country, status == 1
     ) |>
     dplyr::pull(`odimcode`)
-odimcodes <- (odimcodes[1:3])
+odimcodes <- (odimcodes)
 # capturing outputs
 print('Serialization of odimcodes')
 file <- file(paste0('/tmp/odimcodes_', id, '.json'))
