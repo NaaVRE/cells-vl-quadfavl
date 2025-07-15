@@ -147,7 +147,7 @@ dir.create(file.path(conff_local_vp_dir), showWarnings = FALSE)
 
 cli::cli_h1("Creating time sequence")
 
-t<-seq(as.POSIXct(Sys.Date() - 1), as.POSIXct(Sys.Date()), conff_de_time_interval)
+t<-seq(as.POSIXct(Sys.Date() - 0), as.POSIXct(Sys.Date()+1), conff_de_time_interval)
 print(t)
 conff_minio_endpoint <- "scruffy.lab.uvalight.net:9000"
 cli::cli_h1("Creating {.cls data.frame} with jobs")
@@ -157,12 +157,27 @@ res<-expand_grid(odim=unlist(odimcode), times = t) |>
       filename=glue::glue("{odim}_vp_{strftime(times_utc, '%Y%m%dT%H%M%SZ_0xb.h5')}"),
       hdf5_dirpath=glue::glue("hdf5/{odim}/{strftime(times_utc, '%Y/%m/%d')}/"),
       local_path=file.path(conff_local_vp_dir,hdf5_dirpath,filename))|>
+group_by(hdf5_dirpath)|>
+group_walk(~{dir.create(file.path(conff_local_vp_dir, .y$hdf5_dirpath), recursive = T, showWarnings=FALSE)}) |>
+ungroup()|>
 mutate(
       vp = purrr::pmap(
     list(odim, times, local_path),
-    ~ list(try(calculate_vp(calculate_param(getRad::get_pvol(..1, ..2), RHOHV = urhohv), vpfile = ..3)))
+    ~ (try(calculate_vp(calculate_param(getRad::get_pvol(..1, ..2), RHOHV = urhohv), vpfile = ..3))),
+          .progress = list(
+  type = "iterator", 
+  format = "Calculating vertical profiles {cli::pb_bar} {cli::pb_percent}",
+  clear = TRUE)
   )
   )
+
+failed<-purrr::map_lgl(res$vp, inherits, "try-error")
+if(any(failed))
+    {
+    cli::cli_alert_danger("There are failed jobs ({sum(failed)}/{nrow(res)})")
+    cli::cli_alert_info("The following files are omited {res$filename[failed]}")
+    res<-res[!failed,]
+    }
 print(res)
 vp_paths <- (res$local_path)
 # capturing outputs
