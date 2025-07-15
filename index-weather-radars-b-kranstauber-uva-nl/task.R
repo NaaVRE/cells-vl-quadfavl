@@ -85,18 +85,15 @@ var_serialization <- function(var){
 
 id <- gsub('"', '', opt$id)
 
-{'name': 'conf_minio_endpoint', 'assignation': 'conf_minio_endpoint<-"scruffy.lab.uvalight.net:9000"'}
-{'name': 'conf_local_vp_dir', 'assignation': 'conf_local_vp_dir<-"/tmp/data/vp"'}
-{'name': 'conf_de_max_days', 'assignation': 'conf_de_max_days<-3'}
-{'name': 'conf_de_time_interval', 'assignation': 'conf_de_time_interval<-"720 mins"'}
 
 print("Running the cell")
 library("getRad")
 library("tidyr")
 library("dplyr")
 
+odimcodes <- getRad::get_weather_radars()
 
-odimcodes <- getRad::weather_radars() |>
+odimcodes <- getRad::get_weather_radars() |>
     dplyr::filter(
         country == param_country, status == 1
     ) |>
