@@ -83,8 +83,7 @@ id <- gsub('"', '', opt$id)
 
 
 print("Running the cell")
-param_county<-"Germany"
-dput(param_country)
+pparam_county<-"Germany"
 library("getRad")
 library("tidyr")
 library("dplyr")
@@ -92,7 +91,7 @@ library("dplyr")
 
 odimcodes <- getRad::get_weather_radars() |>
     dplyr::filter(
-        country == param_country, status == 1
+        country == pparam_country, status == 1
     ) |>
     dplyr::pull(`odimcode`)
 odimcodes <- (odimcodes[1:3])
