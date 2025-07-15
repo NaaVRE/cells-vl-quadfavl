@@ -91,7 +91,6 @@ library("getRad")
 library("tidyr")
 library("dplyr")
 
-odimcodes <- getRad::get_weather_radars()
 
 odimcodes <- getRad::get_weather_radars() |>
     dplyr::filter(
