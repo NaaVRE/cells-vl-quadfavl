@@ -145,11 +145,13 @@ dir.create(file.path(conff_local_vp_dir), showWarnings = FALSE)
 
 
 
+cli::cli_h1("Creating time sequence")
+
 t<-seq(as.POSIXct(Sys.Date() - 1), as.POSIXct(Sys.Date()), conff_de_time_interval)
 print(t)
 conff_minio_endpoint <- "scruffy.lab.uvalight.net:9000"
-
-expand_grid(odim=unlist(odimcode), times = t) |>
+cli::cli_h1("Creating {.cls data.frame} with jobs")
+res<-expand_grid(odim=unlist(odimcode), times = t) |>
   mutate(
       times_utc=with_tz(times,'UTC'),
       filename=glue::glue("{odim}_vp_{strftime(times_utc, '%Y%m%dT%H%M%SZ_0xb.h5')}"),
