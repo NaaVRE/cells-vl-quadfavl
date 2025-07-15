@@ -152,7 +152,7 @@ generate_vp_file_name <- function(odimcode, times, wmocode, v2bversion) {
   return(filename)
 }
 conff_local_vp_dir <- "/tmp/data/vp"
-conff_de_time_interval <- "15 mins"
+conff_de_time_interval <- "5 mins"
 conff_de_max_days <- 3
 
 dir.create(file.path(conff_local_vp_dir), showWarnings = FALSE)
