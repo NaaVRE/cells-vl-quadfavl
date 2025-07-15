@@ -34,10 +34,6 @@ if (!requireNamespace("stringr", quietly = TRUE)) {
 	install.packages("stringr", repos="http://cran.us.r-project.org")
 }
 library(stringr)
-if (!requireNamespace("vol2birdR", quietly = TRUE)) {
-	install.packages("vol2birdR", repos="http://cran.us.r-project.org")
-}
-library(vol2birdR)
 if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
@@ -87,6 +83,7 @@ id <- gsub('"', '', opt$id)
 
 
 print("Running the cell")
+param_county<-"Germany"
 dput(param_country)
 library("getRad")
 library("tidyr")
