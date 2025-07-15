@@ -161,7 +161,7 @@ dir.create(file.path(conff_local_vp_dir), showWarnings = FALSE)
 
 cli::cli_h1("Creating time sequence")
 time<-lubridate::with_tz(lubridate::floor_date(Sys.time(),conff_de_time_interval),"UTC")
-t<-seq(time-lubridate::hours(60), time, conff_de_time_interval)
+t<-seq(time-lubridate::hours(49), time, conff_de_time_interval)
 cli::cli_inform("Times: {t}")
 conff_minio_endpoint <- "scruffy.lab.uvalight.net:9000"
 cli::cli_h1("Creating {.cls data.frame} with jobs")
@@ -192,7 +192,7 @@ group_walk(~{dir.create(file.path(conff_local_vp_dir, .y$hdf5_dirpath), recursiv
   }) |>
 ungroup()%T>% {x<-.;cli::cli_inform("Out of {nrow(x)} files {sum(x$file_exists)} already exist")} |> 
 filter(!file_exists)|>
-head(50) |>
+head(40) |>
 mutate(
       vp = purrr::pmap(
     list(odim, times, local_path),
