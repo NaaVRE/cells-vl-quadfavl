@@ -10,8 +10,10 @@ dependencies:
   - r-cli
   - r-dplyr
   - r-glue
+  - r-aws.s3
   - r-purrr
   - r-jsonlite
   - r-stringr
+  - r-SecretsProvider
   - papermill
   - ipykernel

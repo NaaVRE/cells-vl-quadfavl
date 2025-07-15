@@ -38,10 +38,18 @@ if (!requireNamespace("stringr", quietly = TRUE)) {
 	install.packages("stringr", repos="http://cran.us.r-project.org")
 }
 library(stringr)
+if (!requireNamespace("aws.s3", quietly = TRUE)) {
+	install.packages("aws.s3", repos="http://cran.us.r-project.org")
+}
+library(aws.s3)
 if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
 library(jsonlite)
+if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
+	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
+}
+library(SecretsProvider)
 
 
 
@@ -156,7 +164,7 @@ res<-expand_grid(odim=unlist(odimcode), times = t) |>
       times_utc=with_tz(times,'UTC'),
       filename=glue::glue("{odim}_vp_{strftime(times_utc, '%Y%m%dT%H%M%SZ_0xb.h5')}"),
       hdf5_dirpath=glue::glue("hdf5/{odim}/{strftime(times_utc, '%Y/%m/%d')}/"),
-      local_path=file.path(conff_local_vp_dir,hdf5_dirpath,filename))|>
+      local_path=gsub('//','/',file.path(conff_local_vp_dir,hdf5_dirpath,filename)))|>
 group_by(hdf5_dirpath)|>
 group_walk(~{dir.create(file.path(conff_local_vp_dir, .y$hdf5_dirpath), recursive = T, showWarnings=FALSE)}) |>
 ungroup()|>
