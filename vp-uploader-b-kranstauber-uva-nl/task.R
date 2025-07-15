@@ -38,14 +38,6 @@ if (!requireNamespace("stringr", quietly = TRUE)) {
 	install.packages("stringr", repos="http://cran.us.r-project.org")
 }
 library(stringr)
-if (!requireNamespace("aws.s3", quietly = TRUE)) {
-	install.packages("aws.s3", repos="http://cran.us.r-project.org")
-}
-library(aws.s3)
-if (!requireNamespace("jsonlite", quietly = TRUE)) {
-	install.packages("jsonlite", repos="http://cran.us.r-project.org")
-}
-library(jsonlite)
 
 
 secret_minio_key = Sys.getenv('secret_minio_key')
@@ -113,8 +105,15 @@ dput(vp_paths)
 
 conff_local_vp_dir <- "/tmp/data/vp"
 
-print("for loop")
+cli::cli_progress_bar( format = paste0(
+  "{pb_spin} Uploading {.path {basename(vp_path)}} ",
+  "[{pb_current}/{pb_total}]   ETA:{pb_eta}"
+), total = length(vp_paths)
 for (vp_path in vp_paths){
+      cli::cli_progress_update()
+
+     print(vp_path)
+    print(file.exists(vp_path))
     cli::cli_inform("Uploading:  {vp_path}")
     object<-sub(paste0(conff_local_vp_dir,'/'),'',vp_path)  
         cli::cli_inform("Object:  {object}")
@@ -132,6 +131,6 @@ for (vp_path in vp_paths){
   secret = secret_minio_secret
   
 ) 
-    print(vp_path)
-    print(file.exists(vp_path))
+   
 }
+cli::cli_process_done()
