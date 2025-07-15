@@ -122,7 +122,8 @@ for (vp_path in vp_paths){
       cli::cli_progress_update(extra=list(object=object))
     aws.s3::put_object(file=vp_path,
   bucket = "naa-vre-public",
-                 object=  object,  
+                 object= basename( object),
+                       prefix=dirname(object),
   delimiter = "/",
   use_https = T,
   check_region = F,
