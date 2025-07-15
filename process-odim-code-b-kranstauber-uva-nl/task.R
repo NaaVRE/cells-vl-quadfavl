@@ -14,6 +14,10 @@ if (!requireNamespace("tidyr", quietly = TRUE)) {
 	install.packages("tidyr", repos="http://cran.us.r-project.org")
 }
 library(tidyr)
+if (!requireNamespace("aws.s3", quietly = TRUE)) {
+	install.packages("aws.s3", repos="http://cran.us.r-project.org")
+}
+library(aws.s3)
 if (!requireNamespace("bioRad", quietly = TRUE)) {
 	install.packages("bioRad", repos="http://cran.us.r-project.org")
 }
@@ -30,6 +34,10 @@ if (!requireNamespace("lubridate", quietly = TRUE)) {
 	install.packages("lubridate", repos="http://cran.us.r-project.org")
 }
 library(lubridate)
+if (!requireNamespace("magrittr", quietly = TRUE)) {
+	install.packages("magrittr", repos="http://cran.us.r-project.org")
+}
+library(magrittr)
 if (!requireNamespace("purrr", quietly = TRUE)) {
 	install.packages("purrr", repos="http://cran.us.r-project.org")
 }
@@ -38,20 +46,18 @@ if (!requireNamespace("stringr", quietly = TRUE)) {
 	install.packages("stringr", repos="http://cran.us.r-project.org")
 }
 library(stringr)
-if (!requireNamespace("aws.s3", quietly = TRUE)) {
-	install.packages("aws.s3", repos="http://cran.us.r-project.org")
+if (!requireNamespace("tibble", quietly = TRUE)) {
+	install.packages("tibble", repos="http://cran.us.r-project.org")
 }
-library(aws.s3)
+library(tibble)
 if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
 library(jsonlite)
-if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
-	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
-}
-library(SecretsProvider)
 
 
+secret_minio_key = Sys.getenv('secret_minio_key')
+secret_minio_secret = Sys.getenv('secret_minio_secret')
 
 print('option_list')
 option_list = list(
@@ -159,15 +165,34 @@ t<-seq(as.POSIXct(Sys.Date() - 0), as.POSIXct(Sys.Date()+1), conff_de_time_inter
 print(t)
 conff_minio_endpoint <- "scruffy.lab.uvalight.net:9000"
 cli::cli_h1("Creating {.cls data.frame} with jobs")
+require(magrittr)
 res<-expand_grid(odim=unlist(odimcode), times = t) |>
   mutate(
       times_utc=with_tz(times,'UTC'),
       filename=glue::glue("{odim}_vp_{strftime(times_utc, '%Y%m%dT%H%M%SZ_0xb.h5')}"),
       hdf5_dirpath=glue::glue("hdf5/{odim}/{strftime(times_utc, '%Y/%m/%d')}/"),
-      local_path=gsub('//','/',file.path(conff_local_vp_dir,hdf5_dirpath,filename)))|>
+      local_path= gsub('//','/',file.path(conff_local_vp_dir,hdf5_dirpath,filename)))|>
 group_by(hdf5_dirpath)|>
 group_walk(~{dir.create(file.path(conff_local_vp_dir, .y$hdf5_dirpath), recursive = T, showWarnings=FALSE)}) |>
-ungroup()|>
+  group_modify(~ {
+      aws.s3::get_bucket(
+  bucket = "naa-vre-public",
+  prefix = paste0("vl-vol2bird/quadfavl/", .y),
+  delimiter = "/",
+  use_https = T,
+  check_region = F,
+  region = "nl-uvalight",
+  verbose = FALSE,
+  parse_response = T,
+  base_url = "scruffy.lab.uvalight.net:9000",
+  key = secret_minio_key,
+  secret = secret_minio_secret
+  ) |> purrr::map_chr(~.x$Key) |> basename() -> existing_files
+    .x %>% tibble::add_column(file_exists=.x$filename %in% existing_files)
+  }) |>
+ungroup()%T>% {x<-.;cli::cli_inform("Out of {nrow(x)} files {sum(x$file_exists)} already exist")} |> 
+filter(!file_exists)|>
+
 mutate(
       vp = purrr::pmap(
     list(odim, times, local_path),
