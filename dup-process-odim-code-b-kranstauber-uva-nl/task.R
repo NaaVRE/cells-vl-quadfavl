@@ -42,6 +42,14 @@ if (!requireNamespace("aws.s3", quietly = TRUE)) {
 	install.packages("aws.s3", repos="http://cran.us.r-project.org")
 }
 library(aws.s3)
+if (!requireNamespace("magrittr", quietly = TRUE)) {
+	install.packages("magrittr", repos="http://cran.us.r-project.org")
+}
+library(magrittr)
+if (!requireNamespace("tibble", quietly = TRUE)) {
+	install.packages("tibble", repos="http://cran.us.r-project.org")
+}
+library(tibble)
 if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
@@ -186,9 +194,8 @@ group_walk(~{dir.create(file.path(conff_local_vp_dir, .y$hdf5_dirpath), recursiv
   ) |> purrr::map_chr(~.x$Key) |> basename() -> existing_files
     .x %>% tibble::add_column(file_exists=.x$filename %in% existing_files)
   }) |>
-ungroup()
-%T>% {x<-.;cli::cli_inform("Out of {nrow(x)} files {sum(x$file_exists)} already exist")} 
-|> filter(!file_exists)|>
+ungroup()%T>% {x<-.;cli::cli_inform("Out of {nrow(x)} files {sum(x$file_exists)} already exist")} |> 
+filter(!file_exists)|>
 
 mutate(
       vp = purrr::pmap(
