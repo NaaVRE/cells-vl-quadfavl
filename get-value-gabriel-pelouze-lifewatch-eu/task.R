@@ -8,6 +8,7 @@ library(jsonlite)
 print('option_list')
 option_list = list(
 
+make_option(c("--a"), action="store", default=NA, type="integer", help="my description"),
 make_option(c("--id"), action="store", default=NA, type="character", help="task id")
 )
 
@@ -43,14 +44,16 @@ var_serialization <- function(var){
     )
 }
 
+print("Retrieving a")
+var = opt$a
+print(var)
+var_len = length(var)
+print(paste("Variable a has length", var_len))
+
+a = opt$a
 id <- gsub('"', '', opt$id)
 
 {'name': 'conf_test', 'assignation': "conf_test='abc'"}
 
 print("Running the cell")
-a = 1
-# capturing outputs
-print('Serialization of a')
-file <- file(paste0('/tmp/a_', id, '.json'))
-writeLines(toJSON(a, auto_unbox=TRUE), file)
-close(file)
+print(a)
