@@ -152,7 +152,7 @@ mutate(
   )
   )
 print(res)
-vp_paths <- (res$file)
+vp_paths <- (res$local_path)
 # capturing outputs
 print('Serialization of vp_paths')
 file <- file(paste0('/tmp/vp_paths_', id, '.json'))
