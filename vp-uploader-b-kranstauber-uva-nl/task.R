@@ -46,6 +46,10 @@ if (!requireNamespace("jsonlite", quietly = TRUE)) {
 	install.packages("jsonlite", repos="http://cran.us.r-project.org")
 }
 library(jsonlite)
+if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
+	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
+}
+library(SecretsProvider)
 
 
 secret_minio_key = Sys.getenv('secret_minio_key')
@@ -111,6 +115,13 @@ cli::cli_h3("{.arg vp_paths} after cleaning")
 dput(vp_paths)
 
 
+Sys.setenv(
+  AWS_ACCESS_KEY_ID = secret_minio_key,
+  AWS_SECRET_ACCESS_KEY = secret_minio_secret,
+  AWS_S3_ENDPOINT = "scruffy.lab.uvalight.net:9000",
+  AWS_DEFAULT_REGION = "nl-uvalight"
+)
+
 conff_local_vp_dir <- "/tmp/data/vp"
 
 cli::cli_progress_bar( format = paste0(
@@ -127,11 +138,8 @@ for (vp_path in vp_paths){
   delimiter = "/",
   use_https = T,
   check_region = F,
-  region = "nl-uvalight",
   verbose = TRUE,
-  base_url = "scruffy.lab.uvalight.net:9000",
-  key = secret_minio_key,
-  secret = secret_minio_secret
+
   
 ) 
    
