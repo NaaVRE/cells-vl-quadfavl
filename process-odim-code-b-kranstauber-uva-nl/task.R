@@ -14,14 +14,14 @@ if (!requireNamespace("tidyr", quietly = TRUE)) {
 	install.packages("tidyr", repos="http://cran.us.r-project.org")
 }
 library(tidyr)
-if (!requireNamespace("cli", quietly = TRUE)) {
-	install.packages("cli", repos="http://cran.us.r-project.org")
-}
-library(cli)
 if (!requireNamespace("bioRad", quietly = TRUE)) {
 	install.packages("bioRad", repos="http://cran.us.r-project.org")
 }
 library(bioRad)
+if (!requireNamespace("cli", quietly = TRUE)) {
+	install.packages("cli", repos="http://cran.us.r-project.org")
+}
+library(cli)
 if (!requireNamespace("glue", quietly = TRUE)) {
 	install.packages("glue", repos="http://cran.us.r-project.org")
 }
@@ -163,7 +163,7 @@ ungroup()|>
 mutate(
       vp = purrr::pmap(
     list(odim, times, local_path),
-    ~ (try(calculate_vp(calculate_param(getRad::get_pvol(..1, ..2), RHOHV = urhohv), vpfile = ..3))),
+    ~ suppressMessages(try(calculate_vp(calculate_param(getRad::get_pvol(..1, ..2), RHOHV = urhohv), vpfile = ..3))),
           .progress = list(
   type = "iterator", 
   format = "Calculating vertical profiles {cli::pb_bar} {cli::pb_percent}",
@@ -179,7 +179,7 @@ if(any(failed))
     res<-res[!failed,]
     }
 print(res)
-vp_paths <- (res$local_path)
+vp_paths <- res$local_path
 # capturing outputs
 print('Serialization of vp_paths')
 file <- file(paste0('/tmp/vp_paths_', id, '.json'))
