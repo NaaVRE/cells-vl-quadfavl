@@ -152,7 +152,7 @@ generate_vp_file_name <- function(odimcode, times, wmocode, v2bversion) {
   return(filename)
 }
 conff_local_vp_dir <- "/tmp/data/vp"
-conff_de_time_interval <- "720 mins"
+conff_de_time_interval <- "5 mins"
 conff_de_max_days <- 3
 
 dir.create(file.path(conff_local_vp_dir), showWarnings = FALSE)
@@ -161,7 +161,7 @@ dir.create(file.path(conff_local_vp_dir), showWarnings = FALSE)
 
 cli::cli_h1("Creating time sequence")
 
-t<-seq(as.POSIXct(Sys.Date() - 0), as.POSIXct(Sys.Date()+1), conff_de_time_interval)
+t<-seq(as.POSIXct(Sys.Date() - 1), as.POSIXct(Sys.Date()+1), conff_de_time_interval)
 print(t)
 conff_minio_endpoint <- "scruffy.lab.uvalight.net:9000"
 cli::cli_h1("Creating {.cls data.frame} with jobs")
