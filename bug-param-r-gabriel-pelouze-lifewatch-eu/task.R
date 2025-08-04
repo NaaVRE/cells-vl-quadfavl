@@ -47,6 +47,7 @@ id <- gsub('"', '', opt$id)
 
 
 print("Running the cell")
+print(param_test)
 a = 1
 # capturing outputs
 print('Serialization of a')
