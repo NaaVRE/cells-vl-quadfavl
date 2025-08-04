@@ -8,6 +8,7 @@ library(jsonlite)
 print('option_list')
 option_list = list(
 
+make_option(c("--param_test"), action="store", default=NA, type="character", help="my description"),
 make_option(c("--id"), action="store", default=NA, type="character", help="task id")
 )
 
