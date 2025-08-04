@@ -53,7 +53,6 @@ print(paste("Variable a has length", var_len))
 a = opt$a
 id <- gsub('"', '', opt$id)
 
-{'name': 'conf_test', 'assignation': "conf_test='abc'"}
 
 print("Running the cell")
 print(a)
