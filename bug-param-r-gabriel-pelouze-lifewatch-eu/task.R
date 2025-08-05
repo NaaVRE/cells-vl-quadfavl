@@ -44,6 +44,13 @@ var_serialization <- function(var){
     )
 }
 
+print("Retrieving param_test")
+var = opt$param_test
+print(var)
+var_len = length(var)
+print(paste("Variable param_test has length", var_len))
+
+param_test <- gsub("\"", "", opt$param_test)
 id <- gsub('"', '', opt$id)
 
 
