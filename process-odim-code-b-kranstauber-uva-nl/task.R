@@ -42,10 +42,6 @@ if (!requireNamespace("purrr", quietly = TRUE)) {
 	install.packages("purrr", repos="http://cran.us.r-project.org")
 }
 library(purrr)
-if (!requireNamespace("stringr", quietly = TRUE)) {
-	install.packages("stringr", repos="http://cran.us.r-project.org")
-}
-library(stringr)
 if (!requireNamespace("tibble", quietly = TRUE)) {
 	install.packages("tibble", repos="http://cran.us.r-project.org")
 }
@@ -58,6 +54,10 @@ if (!requireNamespace("httr", quietly = TRUE)) {
 	install.packages("httr", repos="http://cran.us.r-project.org")
 }
 library(httr)
+if (!requireNamespace("xml2", quietly = TRUE)) {
+	install.packages("xml2", repos="http://cran.us.r-project.org")
+}
+library(xml2)
 if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
 	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
 }
@@ -130,42 +130,14 @@ library("dplyr")
 library("bioRad")
 library("glue")
 library("lubridate")
-stopifnot(length(odimcode)==1)
-format_v2b_version <- function(vol2bird_version) {
-  v2b_version_formatted <- gsub(".", "-", vol2bird_version, fix = TRUE)
-  v2b_version_parts <- stringr:::str_split(v2b_version_formatted, pattern = "-")
-  v2b_major_version_parts <- unlist(v2b_version_parts)[1:3]
-  v2b_major_version_formatted <- paste(
-    c(
-      "v",
-      paste(
-        v2b_major_version_parts,
-        collapse = "-"
-      ),
-      ".h5"
-    ),
-    collapse = ""
-  )
-  return(v2b_major_version_formatted)
-}
+library("magrittr")
 
-generate_vp_file_name <- function(odimcode, times, wmocode, v2bversion) {
-  datatype <- "vp"
-  formatted_time <- format(times, format = "%Y%m%dT%H%M", tz = "UTC", usetz = FALSE)
-  filename <- paste(
-    odimcode, datatype, formatted_time, wmocode, v2bversion,
-    sep = "_"
-  )
-  print(filename)
-  return(filename)
-}
+stopifnot(length(odimcode)==1)
 conff_local_vp_dir <- "/tmp/data/vp"
 conff_de_time_interval <- "5 mins"
 conff_de_max_days <- 3
 
 dir.create(file.path(conff_local_vp_dir), showWarnings = FALSE)
-
-
 
 cli::cli_h1("Creating time sequence")
 time<-lubridate::with_tz(lubridate::floor_date(Sys.time(),conff_de_time_interval),"UTC")
@@ -173,44 +145,61 @@ t<-seq(time-lubridate::hours(49), time, conff_de_time_interval)
 cli::cli_inform("Times: {t}")
 conff_minio_endpoint <- "scruffy.lab.uvalight.net:9000"
 cli::cli_h1("Creating {.cls data.frame} with jobs")
-require(magrittr)
-res<-expand_grid(odim=unlist(odimcode), times = t) |>
+planned_work<-expand_grid(odim=unlist(odimcode), times = t) |>
   mutate(
       times_utc=with_tz(times,'UTC'),
       filename=glue::glue("{odim}_vp_{strftime(times_utc, '%Y%m%dT%H%M%SZ_0xb.h5')}"),
       hdf5_dirpath=glue::glue("hdf5/{odim}/{strftime(times_utc, '%Y/%m/%d')}/"),
-      local_path= gsub('//','/',file.path(conff_local_vp_dir,hdf5_dirpath,filename)))|>
-group_by(hdf5_dirpath)|>
-group_walk(~{dir.create(file.path(conff_local_vp_dir, .y$hdf5_dirpath), recursive = T, showWarnings=FALSE)}) |>
+      local_path= gsub('//','/',file.path(conff_local_vp_dir,hdf5_dirpath,filename))) |>
+  group_by(hdf5_dirpath)|>
+  group_walk(~{dir.create(file.path(conff_local_vp_dir, .y$hdf5_dirpath), recursive = T, showWarnings=FALSE)}) |>
   group_modify(~ {
       aws.s3::get_bucket(
   bucket = "naa-vre-public",
   prefix = paste0("vl-vol2bird/quadfavl/", .y),
   delimiter = "/",
-  use_https = T,
-  check_region = F,
+  use_https = TRUE,
+  check_region = FALSE,
   region = "nl-uvalight",
   verbose = FALSE,
-  parse_response = T,
-  base_url = "scruffy.lab.uvalight.net:9000",
+  parse_response = TRUE,
+  base_url = conff_minio_endpoint,              
   key = secret_minio_key,
   secret = secret_minio_secret
   ) |> purrr::map_chr(~.x$Key) |> basename() -> existing_files
     .x %>% tibble::add_column(file_exists=.x$filename %in% existing_files)
   }) |>
-ungroup()%T>% {x<-.;cli::cli_inform("Out of {nrow(x)} files {sum(x$file_exists)} already exist")} |> 
-filter(!file_exists)|>
-head(50) |>
-mutate(
-      vp = purrr::pmap(
-    list(odim, times, local_path),
-    ~ suppressMessages(try(calculate_vp(calculate_param(getRad::get_pvol(..1, ..2), RHOHV = urhohv), vpfile = ..3))),
-          .progress = list(
-  type = "iterator", 
-  format = "Calculating vertical profiles {cli::pb_bar} {cli::pb_percent}",
-  clear = TRUE)
-  )
-  )
+  ungroup()%T>% {x<-.;cli::cli_inform("Out of {nrow(x)} files {sum(x$file_exists)} already exist")} |> 
+  filter(!file_exists)
+
+convert_pvol_for_vp_calculations <- function(pvol){
+  stopifnot(bioRad::is.pvol(pvol))
+  ctry_code <- substr(pvol$radar,1,2)
+  switch(
+      ctry_code,
+      "de" = calculate_param(pvol, RHOHV = urhohv ),
+      pvol
+  )  
+}
+res<-data.frame()
+n_vp<-50
+while(sum(purrr::map_lgl(res$vp, bioRad::is.vp)) < n_vp & nrow(planned_work) != 0){
+    res <- planned_work |>
+    head(n_vp-sum(purrr::map_lgl(res$vp, bioRad::is.vp))) |>
+    mutate(
+        vp = purrr::pmap(
+            list(odim, times, local_path),
+            ~ suppressMessages(try(calculate_vp(convert_pvol_for_vp_calculations(getRad::get_pvol(..1, ..2)), vpfile = ..3))),
+            .progress = list(
+                type = "iterator", 
+                format = "Calculating vertical profiles {cli::pb_bar} {cli::pb_percent}",
+                clear = TRUE)
+        )
+    ) |> 
+    bind_rows(res)
+    planned_work<-planned_work |> filter(!(filename %in% res$filename))
+}
+
 
 failed<-purrr::map_lgl(res$vp, inherits, "try-error")
 if(any(failed))
