@@ -42,10 +42,6 @@ if (!requireNamespace("purrr", quietly = TRUE)) {
 	install.packages("purrr", repos="http://cran.us.r-project.org")
 }
 library(purrr)
-if (!requireNamespace("stringr", quietly = TRUE)) {
-	install.packages("stringr", repos="http://cran.us.r-project.org")
-}
-library(stringr)
 if (!requireNamespace("tibble", quietly = TRUE)) {
 	install.packages("tibble", repos="http://cran.us.r-project.org")
 }
@@ -128,9 +124,6 @@ Sys.setenv(
   AWS_DEFAULT_REGION = "nl-uvalight"
 )
 
-
-
-
 aws.s3::get_bucket(
   bucket = "naa-vre-public",
   prefix = paste0("vl-vol2bird/quadfavl/hdf5/"),
@@ -172,7 +165,7 @@ mutate(csvtime=if(!aws.s3::object_exists(  bucket = "naa-vre-public",object=past
                ) |> filter(hdftime>csvtime)|>
 select(-hdfdf) |> 
 mutate(vpts=list(bind_rows(purrr::map(hdfkeys, ~as.data.frame(suntime=F,aws.s3::s3read_using(bioRad::read_vpfiles, object = .x, bucket = "naa-vre-public"))|> tibble::add_column(source_file=basename(.x))))))|>
-mutate(aws.s3::s3write_using(vpts,write.csv, na='',row.names=F, quote=F,bucket = "naa-vre-public",
+mutate(filewrite=aws.s3::s3write_using(vpts,write.csv, na='',row.names=F, quote=F,bucket = "naa-vre-public",
   object = paste0("vl-vol2bird/quadfavl/",csvpath)))
 
 df|>select(-vpts, -hdfkeys)
