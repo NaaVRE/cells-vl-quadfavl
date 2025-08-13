@@ -8,7 +8,6 @@ library(jsonlite)
 print('option_list')
 option_list = list(
 
-make_option(c("--dummy"), action="store", default=NA, type="character", help="my description"),
 make_option(c("--id"), action="store", default=NA, type="character", help="task id")
 )
 
@@ -44,18 +43,11 @@ var_serialization <- function(var){
     )
 }
 
-print("Retrieving dummy")
-var = opt$dummy
-print(var)
-var_len = length(var)
-print(paste("Variable dummy has length", var_len))
-
-dummy <- gsub("\"", "", opt$dummy)
 id <- gsub('"', '', opt$id)
 
 
 print("Running the cell")
-abaa <- list("asdf","qwer")
+abaa <- c("asdf","qwer")
 abaa
 # capturing outputs
 print('Serialization of abaa')
