@@ -2,6 +2,10 @@ setwd('/app')
 library(optparse)
 library(jsonlite)
 
+if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
+	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
+}
+library(SecretsProvider)
 if (!requireNamespace("dplyr", quietly = TRUE)) {
 	install.packages("dplyr", repos="http://cran.us.r-project.org")
 }
@@ -58,10 +62,6 @@ if (!requireNamespace("xml2", quietly = TRUE)) {
 	install.packages("xml2", repos="http://cran.us.r-project.org")
 }
 library(xml2)
-if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
-	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
-}
-library(SecretsProvider)
 
 
 secret_minio_key = Sys.getenv('secret_minio_key')
@@ -115,12 +115,14 @@ print(paste("Variable odimcode has length", var_len))
 odimcode <- gsub("\"", "", opt$odimcode)
 id <- gsub('"', '', opt$id)
 
+conf_de_time_interval<-"5 mins"
+conf_local_vp_dir<-"/tmp/data/vp"
 
 print("Running the cell")
 cli::cli_h3("{.arg odimcode} before cleaning")
 dput(odimcode)
 
-odimcode<-gsub('\\[|\\]','', odimcode)
+odimcode <- gsub("\\[|\\]", "", odimcode)
 cli::cli_h3("{.arg odimcode} after cleaning")
 dput(odimcode)
 
@@ -132,84 +134,88 @@ library("glue")
 library("lubridate")
 library("magrittr")
 
-stopifnot(length(odimcode)==1)
-conff_local_vp_dir <- "/tmp/data/vp"
-conff_de_time_interval <- "5 mins"
-conff_de_max_days <- 3
+stopifnot(length(odimcode) == 1)
 
-dir.create(file.path(conff_local_vp_dir), showWarnings = FALSE)
+dir.create(file.path(conf_local_vp_dir), showWarnings = FALSE)
 
 cli::cli_h1("Creating time sequence")
-time<-lubridate::with_tz(lubridate::floor_date(Sys.time(),conff_de_time_interval),"UTC")
-t<-seq(time-lubridate::hours(49), time, conff_de_time_interval)
+time <- lubridate::with_tz(lubridate::floor_date(Sys.time(), conf_de_time_interval), "UTC")
+t <- seq(time - lubridate::hours(49), time, conf_de_time_interval)
 cli::cli_inform("Times: {t}")
-conff_minio_endpoint <- "scruffy.lab.uvalight.net:9000"
 cli::cli_h1("Creating {.cls data.frame} with jobs")
-planned_work<-expand_grid(odim=unlist(odimcode), times = t) |>
+planned_work <- expand_grid(odim = unlist(odimcode), times = t) |>
   mutate(
-      times_utc=with_tz(times,'UTC'),
-      filename=glue::glue("{odim}_vp_{strftime(times_utc, '%Y%m%dT%H%M%SZ_0xb.h5')}"),
-      hdf5_dirpath=glue::glue("hdf5/{odim}/{strftime(times_utc, '%Y/%m/%d')}/"),
-      local_path= gsub('//','/',file.path(conff_local_vp_dir,hdf5_dirpath,filename))) |>
-  group_by(hdf5_dirpath)|>
-  group_walk(~{dir.create(file.path(conff_local_vp_dir, .y$hdf5_dirpath), recursive = T, showWarnings=FALSE)}) |>
-  group_modify(~ {
-      aws.s3::get_bucket(
-  bucket = "naa-vre-public",
-  prefix = paste0("vl-vol2bird/quadfavl/", .y),
-  delimiter = "/",
-  use_https = TRUE,
-  check_region = FALSE,
-  region = "nl-uvalight",
-  verbose = FALSE,
-  parse_response = TRUE,
-  base_url = conff_minio_endpoint,              
-  key = secret_minio_key,
-  secret = secret_minio_secret
-  ) |> purrr::map_chr(~.x$Key) |> basename() -> existing_files
-    .x %>% tibble::add_column(file_exists=.x$filename %in% existing_files)
+    times_utc = with_tz(times, "UTC"),
+    filename = glue::glue("{odim}_vp_{strftime(times_utc, '%Y%m%dT%H%M%SZ_0xb.h5')}"),
+    hdf5_dirpath = glue::glue("hdf5/{odim}/{strftime(times_utc, '%Y/%m/%d')}/"),
+    local_path = gsub("//", "/", file.path(conf_local_vp_dir, hdf5_dirpath, filename))
+  ) |>
+  group_by(hdf5_dirpath) |>
+  group_walk(~ {
+    dir.create(file.path(conf_local_vp_dir, .y$hdf5_dirpath), recursive = T, showWarnings = FALSE)
   }) |>
-  ungroup()%T>% {x<-.;cli::cli_inform("Out of {nrow(x)} files {sum(x$file_exists)} already exist")} |> 
+  group_modify(~ {
+    aws.s3::get_bucket(
+      bucket = "naa-vre-public",
+      prefix = paste0("vl-vol2bird/quadfavl/", .y),
+      delimiter = "/",
+      use_https = TRUE,
+      check_region = FALSE,
+      region = "nl-uvalight",
+      verbose = FALSE,
+      parse_response = TRUE,
+      base_url = conf_minio_endpoint,
+      key = secret_minio_key,
+      secret = secret_minio_secret
+    ) |>
+      purrr::map_chr(~ .x$Key) |>
+      basename() -> existing_files
+    .x %>% tibble::add_column(file_exists = .x$filename %in% existing_files)
+  }) |>
+  ungroup() %T>%
+  {
+    x <- .
+    cli::cli_inform("Out of {nrow(x)} files {sum(x$file_exists)} already exist")
+  } |>
   filter(!file_exists)
 
-convert_pvol_for_vp_calculations <- function(pvol){
+convert_pvol_for_vp_calculations <- function(pvol) {
   stopifnot(bioRad::is.pvol(pvol))
-  ctry_code <- substr(pvol$radar,1,2)
-  switch(
-      ctry_code,
-      "de" = calculate_param(pvol, RHOHV = urhohv ),
-      pvol
-  )  
+  ctry_code <- substr(pvol$radar, 1, 2)
+  switch(ctry_code,
+    "de" = calculate_param(pvol, RHOHV = urhohv),
+    pvol
+  )
 }
-res<-data.frame()
-n_vp<-50
-while(sum(purrr::map_lgl(res$vp, bioRad::is.vp)) < n_vp & nrow(planned_work) != 0){
-    res <- planned_work |>
-    head(n_vp-sum(purrr::map_lgl(res$vp, bioRad::is.vp))) |>
+res <- data.frame()
+n_vp <- 50
+while (sum(purrr::map_lgl(res$vp, bioRad::is.vp)) < n_vp & nrow(planned_work) != 0) {
+  res <- planned_work |>
+    head(n_vp - sum(purrr::map_lgl(res$vp, bioRad::is.vp))) |>
     mutate(
-        vp = purrr::pmap(
-            list(odim, times, local_path),
-            ~ suppressMessages(try(calculate_vp(convert_pvol_for_vp_calculations(getRad::get_pvol(..1, ..2)), vpfile = ..3))),
-            .progress = list(
-                type = "iterator", 
-                format = "Calculating vertical profiles {cli::pb_bar} {cli::pb_percent}",
-                clear = TRUE)
+      vp = purrr::pmap(
+        list(odim, times, local_path),
+        ~ suppressMessages(try(calculate_vp(convert_pvol_for_vp_calculations(getRad::get_pvol(..1, ..2)), vpfile = ..3))),
+        .progress = list(
+          type = "iterator",
+          format = "Calculating vertical profiles {cli::pb_bar} {cli::pb_percent}",
+          clear = TRUE
         )
-    ) |> 
+      )
+    ) |>
     bind_rows(res)
-    planned_work<-planned_work |> filter(!(filename %in% res$filename))
+  planned_work <- planned_work |> filter(!(filename %in% res$filename))
 }
 
 
-failed<-purrr::map_lgl(res$vp, inherits, "try-error")
-if(any(failed))
-    {
-    cli::cli_alert_danger("There are failed jobs ({sum(failed)}/{nrow(res)})")
-    cli::cli_alert_info("The following files are omited {res$filename[failed]}")
-    res<-res[!failed,]
-    }
+failed <- purrr::map_lgl(res$vp, inherits, "try-error")
+if (any(failed)) {
+  cli::cli_alert_danger("There are failed jobs ({sum(failed)}/{nrow(res)})")
+  cli::cli_alert_info("The following files are omited {res$filename[failed]}")
+  res <- res[!failed, ]
+}
 print(res)
-vp_paths <- gsub('/tmp/data/vp/hdf5/','',res$local_path)
+vp_paths <- gsub("/tmp/data/vp/hdf5/", "", res$local_path)
 # capturing outputs
 print('Serialization of vp_paths')
 file <- file(paste0('/tmp/vp_paths_', id, '.json'))
