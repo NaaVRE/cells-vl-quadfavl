@@ -2,6 +2,10 @@ setwd('/app')
 library(optparse)
 library(jsonlite)
 
+if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
+	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
+}
+library(SecretsProvider)
 if (!requireNamespace("dplyr", quietly = TRUE)) {
 	install.packages("dplyr", repos="http://cran.us.r-project.org")
 }
@@ -58,10 +62,6 @@ if (!requireNamespace("xml2", quietly = TRUE)) {
 	install.packages("xml2", repos="http://cran.us.r-project.org")
 }
 library(xml2)
-if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
-	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
-}
-library(SecretsProvider)
 
 
 
