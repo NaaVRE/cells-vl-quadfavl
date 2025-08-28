@@ -50,10 +50,6 @@ if (!requireNamespace("tibble", quietly = TRUE)) {
 	install.packages("tibble", repos="http://cran.us.r-project.org")
 }
 library(tibble)
-if (!requireNamespace("jsonlite", quietly = TRUE)) {
-	install.packages("jsonlite", repos="http://cran.us.r-project.org")
-}
-library(jsonlite)
 if (!requireNamespace("httr", quietly = TRUE)) {
 	install.packages("httr", repos="http://cran.us.r-project.org")
 }
@@ -110,24 +106,24 @@ print(var)
 var_len = length(var)
 print(paste("Variable param_country has length", var_len))
 
-param_country <- gsub("\"", "", opt$param_country)
+print("------------------------Running var_serialization for param_country-----------------------")
+print(opt$param_country)
+param_country = var_serialization(opt$param_country)
+print("---------------------------------------------------------------------------------")
+
 id <- gsub('"', '', opt$id)
 
 
 print("Running the cell")
-param_country
-dput(param_country)
 library("getRad")
 library("tidyr")
 library("dplyr")
 
-
 odimcodes <- getRad::get_weather_radars() |>
     dplyr::filter(
-        country == param_country, status == 1
+        country %in% param_country, status == 1
     ) |>
-    dplyr::pull(`odimcode`)
-odimcodes <- (odimcodes)
+    dplyr::pull(`odimcode`) 
 # capturing outputs
 print('Serialization of odimcodes')
 file <- file(paste0('/tmp/odimcodes_', id, '.json'))
