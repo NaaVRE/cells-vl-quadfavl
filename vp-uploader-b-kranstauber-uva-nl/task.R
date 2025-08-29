@@ -2,6 +2,10 @@ setwd('/app')
 library(optparse)
 library(jsonlite)
 
+if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
+	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
+}
+library(SecretsProvider)
 if (!requireNamespace("dplyr", quietly = TRUE)) {
 	install.packages("dplyr", repos="http://cran.us.r-project.org")
 }
@@ -46,10 +50,6 @@ if (!requireNamespace("tibble", quietly = TRUE)) {
 	install.packages("tibble", repos="http://cran.us.r-project.org")
 }
 library(tibble)
-if (!requireNamespace("jsonlite", quietly = TRUE)) {
-	install.packages("jsonlite", repos="http://cran.us.r-project.org")
-}
-library(jsonlite)
 if (!requireNamespace("httr", quietly = TRUE)) {
 	install.packages("httr", repos="http://cran.us.r-project.org")
 }
@@ -58,10 +58,6 @@ if (!requireNamespace("xml2", quietly = TRUE)) {
 	install.packages("xml2", repos="http://cran.us.r-project.org")
 }
 library(xml2)
-if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
-	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
-}
-library(SecretsProvider)
 
 
 secret_minio_key = Sys.getenv('secret_minio_key')
@@ -112,52 +108,52 @@ print(var)
 var_len = length(var)
 print(paste("Variable vp_paths has length", var_len))
 
-vp_paths <- gsub("\"", "", opt$vp_paths)
+print("------------------------Running var_serialization for vp_paths-----------------------")
+print(opt$vp_paths)
+vp_paths = var_serialization(opt$vp_paths)
+print("---------------------------------------------------------------------------------")
+
 id <- gsub('"', '', opt$id)
 
+conf_minio_endpoint<-"scruffy.lab.uvalight.net:9000"
+conf_minio_bucket<-"naa-vre-public"
+conf_minio_main_path<-"vl-vol2bird/quadfavl/"
+conf_minio_region<-"nl-uvalight"
+conf_local_vp_dir<-"/tmp/data/vp"
 
 print("Running the cell")
-library("jsonlite")
-
-cli::cli_h3("{.arg vp_paths} before cleaning")
 dput(vp_paths)
-vp_paths<-gsub(' |\\[|\\]','',strsplit(vp_paths,',')[[1]])
+vp_paths<-unlist(vp_paths)
+if (length(vp_paths) != 1 || vp_paths != "") {
+  vp_paths <- paste0(conf_local_vp_dir,"/hdf5/", vp_paths)
+  Sys.setenv(
+    AWS_ACCESS_KEY_ID = secret_minio_key,
+    AWS_SECRET_ACCESS_KEY = secret_minio_secret,
+    AWS_S3_ENDPOINT = conf_minio_endpoint,
+    AWS_DEFAULT_REGION = conf_minio_region
+  )
 
-cli::cli_h3("{.arg vp_paths} after cleaning")
-dput(vp_paths)
-if(length(vp_paths)!=1 || vp_paths!=""){
-vp_paths<-paste0("/tmp/data/vp/hdf5/", vp_paths)
-Sys.setenv(
-  AWS_ACCESS_KEY_ID = secret_minio_key,
-  AWS_SECRET_ACCESS_KEY = secret_minio_secret,
-  AWS_S3_ENDPOINT = "scruffy.lab.uvalight.net:9000",
-  AWS_DEFAULT_REGION = "nl-uvalight"
-)
 
-conff_local_vp_dir <- "/tmp/data/vp"
-
-cli::cli_progress_bar( format = paste0(
-  "{pb_spin} Uploading {.path {basename(vp_path)}}",
-  "[{pb_current}/{pb_total}]   ETA:{pb_eta}"
-), total = length(vp_paths))
-for (vp_path in vp_paths){
-        object<-sub(paste0(conff_local_vp_dir,'/'),'vl-vol2bird/quadfavl/',vp_path)  
-      cli::cli_progress_update()
-    aws.s3::put_object(file=vp_path,
-  bucket = "naa-vre-public",
-                 object=object,
-  delimiter = "/",
-  use_https = T,
-  check_region = F,
-  verbose = FALSE,
-
-  
-) 
-   
+  cli::cli_progress_bar(format = paste0(
+    "{pb_spin} Uploading {.path {basename(vp_path)}}",
+    "[{pb_current}/{pb_total}]   ETA:{pb_eta}"
+  ), total = length(vp_paths))
+  for (vp_path in vp_paths) {
+    object <- sub(paste0(conf_local_vp_dir, "/"), conf_minio_main_path, vp_path)
+    cli::cli_progress_update()
+    aws.s3::put_object(
+      file = vp_path,
+      bucket = conf_minio_bucket,
+      object = object,
+      delimiter = "/",
+      use_https = T,
+      check_region = F,
+      verbose = FALSE,
+    )
+  }
+  cli::cli_process_done()
 }
-cli::cli_process_done()
-}
-dummy<-"TRUE"
+dummy <- "TRUE"
 # capturing outputs
 print('Serialization of dummy')
 file <- file(paste0('/tmp/dummy_', id, '.json'))
