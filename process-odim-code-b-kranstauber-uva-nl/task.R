@@ -149,12 +149,13 @@ library("bioRad")
 library("glue")
 library("lubridate")
 library("magrittr")
-
+sessionInfo()
 stopifnot(length(odimcode) == 1)
 invisible(conf_minio_main_path) # seems code analyzyser missed this config
 invisible(conf_minio_region)
 invisible(conf_minio_endpoint)
 invisible(conf_minio_bucket)
+
 dir.create(file.path(conf_local_vp_dir), showWarnings = FALSE)
 
 cli::cli_h1("Creating time sequence")
