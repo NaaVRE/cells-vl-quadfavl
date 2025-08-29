@@ -219,7 +219,7 @@ convert_pvol_for_vp_calculations <- function(pvol) {
   )
 }
 res <- data.frame()
-while (sum(purrr::map_lgl(res$vp, bioRad::is.vp)) < param_n_vp & nrow(planned_work) != 0) {
+while (sum(purrr::map_lgl(res$vp, is.character)) < param_n_vp & nrow(planned_work) != 0) {
   res <- planned_work |>
     head(param_n_vp - sum(purrr::map_lgl(res$vp, bioRad::is.vp))) |>
     mutate(
