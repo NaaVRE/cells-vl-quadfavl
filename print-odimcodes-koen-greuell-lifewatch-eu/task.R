@@ -120,3 +120,5 @@ id <- gsub('"', '', opt$id)
 
 print("Running the cell")
 print(odimcodes)
+print("getRad has version:")
+print(packageVersion("getRad"))
