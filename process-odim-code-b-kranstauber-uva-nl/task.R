@@ -128,7 +128,9 @@ param_n_vp = opt$param_n_vp
 id <- gsub('"', '', opt$id)
 
 conf_time_interval<-"5 mins"
+conf_minio_endpoint<-"scruffy.lab.uvalight.net:9000"
 conf_minio_main_path<-"vl-vol2bird/quadfavl/"
+conf_minio_bucket<-"naa-vre-public"
 conf_minio_region<-"nl-uvalight"
 conf_local_vp_dir<-"/tmp/data/vp"
 
@@ -151,6 +153,8 @@ library("magrittr")
 stopifnot(length(odimcode) == 1)
 invisible(conf_minio_main_path) # seems code analyzyser missed this config
 invisible(conf_minio_region)
+invisible(conf_minio_endpoint)
+invisible(conf_minio_bucket)
 dir.create(file.path(conf_local_vp_dir), showWarnings = FALSE)
 
 cli::cli_h1("Creating time sequence")
