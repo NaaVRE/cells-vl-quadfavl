@@ -232,7 +232,7 @@ while (sum(purrr::map_lgl(res$vp, is.character)) < param_n_vp & nrow(planned_wor
                     vpFilePath<- ..3
                 }else{
                     vpFilePath<-sub(paste0(conf_local_vp_dir,'/hdf5/'),paste0(conf_local_vp_dir,'/hdf5/',i,'/'),..3)
-                    dir.create(vpFilePath, recursive = T, showWarnings = FALSE)
+                    dir.create(dirname(vpFilePath), recursive = T, showWarnings = FALSE)
                 }
                 suppressMessages(calculate_vp(pvolList[[i]], vpfile = vpFilePath))
                 vpPaths<-c(vpPaths, vpFilePath)
