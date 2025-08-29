@@ -9,7 +9,6 @@ dependencies:
   - r-cli
   - r-glue
   - r-SecretsProvider
-  - r-jsonlite
   - r-tibble
   - r-magrittr
   - r-dplyr

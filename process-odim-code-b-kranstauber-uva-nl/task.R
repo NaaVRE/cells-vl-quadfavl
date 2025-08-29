@@ -50,10 +50,6 @@ if (!requireNamespace("tibble", quietly = TRUE)) {
 	install.packages("tibble", repos="http://cran.us.r-project.org")
 }
 library(tibble)
-if (!requireNamespace("jsonlite", quietly = TRUE)) {
-	install.packages("jsonlite", repos="http://cran.us.r-project.org")
-}
-library(jsonlite)
 if (!requireNamespace("httr", quietly = TRUE)) {
 	install.packages("httr", repos="http://cran.us.r-project.org")
 }
@@ -71,6 +67,8 @@ print('option_list')
 option_list = list(
 
 make_option(c("--odimcode"), action="store", default=NA, type="character", help="my description"),
+make_option(c("--param_default_hours_back"), action="store", default=NA, type="integer", help="my description"),
+make_option(c("--param_n_vp"), action="store", default=NA, type="integer", help="my description"),
 make_option(c("--id"), action="store", default=NA, type="character", help="task id")
 )
 
@@ -113,9 +111,23 @@ var_len = length(var)
 print(paste("Variable odimcode has length", var_len))
 
 odimcode <- gsub("\"", "", opt$odimcode)
+print("Retrieving param_default_hours_back")
+var = opt$param_default_hours_back
+print(var)
+var_len = length(var)
+print(paste("Variable param_default_hours_back has length", var_len))
+
+param_default_hours_back = opt$param_default_hours_back
+print("Retrieving param_n_vp")
+var = opt$param_n_vp
+print(var)
+var_len = length(var)
+print(paste("Variable param_n_vp has length", var_len))
+
+param_n_vp = opt$param_n_vp
 id <- gsub('"', '', opt$id)
 
-conf_de_time_interval<-"5 mins"
+conf_time_interval<-"5 mins"
 conf_local_vp_dir<-"/tmp/data/vp"
 
 print("Running the cell")
@@ -139,11 +151,17 @@ stopifnot(length(odimcode) == 1)
 dir.create(file.path(conf_local_vp_dir), showWarnings = FALSE)
 
 cli::cli_h1("Creating time sequence")
-time <- lubridate::with_tz(lubridate::floor_date(Sys.time(), conf_de_time_interval), "UTC")
-t <- seq(time - lubridate::hours(49), time, conf_de_time_interval)
+time <- lubridate::with_tz(lubridate::floor_date(Sys.time(), conf_time_interval), "UTC")
+hours_back<-  switch(substr(odimcode, 1, 2),
+    "se" = 23,
+    param_default_hours_back
+  )
+t <- seq(time - lubridate::hours(hours_back), time, conf_time_interval)
 cli::cli_inform("Times: {t}")
 cli::cli_h1("Creating {.cls data.frame} with jobs")
-planned_work <- expand_grid(odim = unlist(odimcode), times = t) |>
+
+planned_work <- 
+  expand_grid(odim = unlist(odimcode), times = t) |>
   mutate(
     times_utc = with_tz(times, "UTC"),
     filename = glue::glue("{odim}_vp_{strftime(times_utc, '%Y%m%dT%H%M%SZ_0xb.h5')}"),
@@ -156,12 +174,12 @@ planned_work <- expand_grid(odim = unlist(odimcode), times = t) |>
   }) |>
   group_modify(~ {
     aws.s3::get_bucket(
-      bucket = "naa-vre-public",
-      prefix = paste0("vl-vol2bird/quadfavl/", .y),
+      bucket = conf_minio_bucket,
+      prefix = paste0(conf_minio_main_path, .y),
       delimiter = "/",
       use_https = TRUE,
       check_region = FALSE,
-      region = "nl-uvalight",
+      region = conf_minio_region,
       verbose = FALSE,
       parse_response = TRUE,
       base_url = conf_minio_endpoint,
@@ -183,19 +201,36 @@ convert_pvol_for_vp_calculations <- function(pvol) {
   stopifnot(bioRad::is.pvol(pvol))
   ctry_code <- substr(pvol$radar, 1, 2)
   switch(ctry_code,
-    "de" = calculate_param(pvol, RHOHV = urhohv),
-    pvol
+    "de" = list(default=calculate_param(pvol, RHOHV = urhohv)),
+    "cz" = list(default=pvol, th=calculate_param(DBZH=TH)),
+    "ro" = list(default=pvol, singlepol=dplyr::select(pvol, -RHOHV)),
+    "se" = list(default=pvol, 
+                ccorh=calculate_param(pvol, DBZH = TH-CCORH), 
+                ccorh_cpa=calculate_param(pvol,DBZH=dplyr::if_else(c(CPA)>.75, NA, c(TH-CCORH)))),
+    list(default=pvol)
   )
 }
 res <- data.frame()
-n_vp <- 50
-while (sum(purrr::map_lgl(res$vp, bioRad::is.vp)) < n_vp & nrow(planned_work) != 0) {
+while (sum(purrr::map_lgl(res$vp, bioRad::is.vp)) < param_n_vp & nrow(planned_work) != 0) {
   res <- planned_work |>
-    head(n_vp - sum(purrr::map_lgl(res$vp, bioRad::is.vp))) |>
+    head(param_n_vp - sum(purrr::map_lgl(res$vp, bioRad::is.vp))) |>
     mutate(
       vp = purrr::pmap(
-        list(odim, times, local_path),
-        ~ suppressMessages(try(calculate_vp(convert_pvol_for_vp_calculations(getRad::get_pvol(..1, ..2)), vpfile = ..3))),
+        list(odim, times, local_path),~try({
+            pvolList<-convert_pvol_for_vp_calculations(getRad::get_pvol(..1, ..2, param="all"))
+            vpPaths<-c()
+            for( i in names(pvolList)){
+                if(i =="default"){
+                    vpFilePath<- ..3
+                }else{
+                    vpFilePath<-sub(paste0(conf_local_vp_dir,'/hdf5/'),paste0(conf_local_vp_dir,'/hdf5/',i,'/'),..3)
+                    dir.create(vpFilePath, recursive = T, showWarnings = FALSE)
+                }
+                suppressMessages(calculate_vp(pvolList[[i]], vpfile = vpFilePath))
+                vpPaths<-c(vpPaths, vpFilePath)
+            }
+            vpPaths
+        }),
         .progress = list(
           type = "iterator",
           format = "Calculating vertical profiles {cli::pb_bar} {cli::pb_percent}",
@@ -215,7 +250,7 @@ if (any(failed)) {
   res <- res[!failed, ]
 }
 print(res)
-vp_paths <- gsub("/tmp/data/vp/hdf5/", "", res$local_path)
+vp_paths <- gsub(paste0(conf_local_vp_dir,"/hdf5/"), "", unlist(res$vp))
 # capturing outputs
 print('Serialization of vp_paths')
 file <- file(paste0('/tmp/vp_paths_', id, '.json'))
