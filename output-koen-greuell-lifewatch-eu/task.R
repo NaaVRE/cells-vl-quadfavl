@@ -119,3 +119,7 @@ new_string = paste(lan, lan)
 print('packageVersion(getRad)')
 print(packageVersion("getRad"))
 print(R.Version()$version.string)
+
+install.packages("getRad", upgrade = "always")
+print('packageVersion(getRad)')
+print(packageVersion("getRad"))
