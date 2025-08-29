@@ -127,11 +127,11 @@ print(paste("Variable param_n_vp has length", var_len))
 param_n_vp = opt$param_n_vp
 id <- gsub('"', '', opt$id)
 
-conf_minio_endpoint<-"scruffy.lab.uvalight.net:9000"
-conf_minio_bucket<-"naa-vre-public"
 conf_time_interval<-"5 mins"
-conf_minio_main_path<-"vl-vol2bird/quadfavl/"
 conf_minio_region<-"nl-uvalight"
+conf_minio_bucket<-"naa-vre-public"
+conf_minio_endpoint<-"scruffy.lab.uvalight.net:9000"
+conf_minio_main_path<-"vl-vol2bird/quadfavl/"
 conf_local_vp_dir<-"/tmp/data/vp"
 
 print("Running the cell")
@@ -210,7 +210,7 @@ convert_pvol_for_vp_calculations <- function(pvol) {
   ctry_code <- substr(pvol$radar, 1, 2)
   switch(ctry_code,
     "de" = list(default=calculate_param(pvol, RHOHV = urhohv)),
-    "cz" = list(default=pvol, th=calculate_param(DBZH=TH)),
+    "cz" = list(default=pvol, th=calculate_param(pvol,DBZH=TH)),
     "ro" = list(default=pvol, singlepol=dplyr::select(pvol, -RHOHV)),
     "se" = list(default=pvol, 
                 ccorh=calculate_param(pvol, DBZH = TH-CCORH), 
