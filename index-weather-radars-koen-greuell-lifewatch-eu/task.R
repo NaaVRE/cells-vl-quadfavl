@@ -2,6 +2,10 @@ setwd('/app')
 library(optparse)
 library(jsonlite)
 
+if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
+	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
+}
+library(SecretsProvider)
 if (!requireNamespace("dplyr", quietly = TRUE)) {
 	install.packages("dplyr", repos="http://cran.us.r-project.org")
 }
@@ -42,10 +46,6 @@ if (!requireNamespace("purrr", quietly = TRUE)) {
 	install.packages("purrr", repos="http://cran.us.r-project.org")
 }
 library(purrr)
-if (!requireNamespace("stringr", quietly = TRUE)) {
-	install.packages("stringr", repos="http://cran.us.r-project.org")
-}
-library(stringr)
 if (!requireNamespace("tibble", quietly = TRUE)) {
 	install.packages("tibble", repos="http://cran.us.r-project.org")
 }
@@ -62,16 +62,13 @@ if (!requireNamespace("xml2", quietly = TRUE)) {
 	install.packages("xml2", repos="http://cran.us.r-project.org")
 }
 library(xml2)
-if (!requireNamespace("SecretsProvider", quietly = TRUE)) {
-	install.packages("SecretsProvider", repos="http://cran.us.r-project.org")
-}
-library(SecretsProvider)
 
 
 
 print('option_list')
 option_list = list(
 
+make_option(c("--param_country"), action="store", default=NA, type="character", help="my description"),
 make_option(c("--id"), action="store", default=NA, type="character", help="task id")
 )
 
@@ -107,12 +104,19 @@ var_serialization <- function(var){
     )
 }
 
+print("Retrieving param_country")
+var = opt$param_country
+print(var)
+var_len = length(var)
+print(paste("Variable param_country has length", var_len))
+
+param_country <- gsub("\"", "", opt$param_country)
 id <- gsub('"', '', opt$id)
 
 
 print("Running the cell")
-pparam_country<-"Germany"
-dput(pparam_country)
+param_country
+dput(param_country)
 library("getRad")
 library("tidyr")
 library("dplyr")
@@ -120,7 +124,7 @@ library("dplyr")
 
 odimcodes <- getRad::get_weather_radars() |>
     dplyr::filter(
-        country == pparam_country, status == 1
+        country == param_country, status == 1
     ) |>
     dplyr::pull(`odimcode`)
 odimcodes <- (odimcodes)
