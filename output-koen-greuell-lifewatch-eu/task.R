@@ -120,6 +120,6 @@ print('packageVersion(getRad)')
 print(packageVersion("getRad"))
 print(R.Version()$version.string)
 
-install.packages("getRad", upgrade = "always")
+install.packages("getRad", upgrade = "always", repos = "https://cran.rstudio.com/")
 print('packageVersion(getRad)')
 print(packageVersion("getRad"))
