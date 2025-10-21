@@ -5,19 +5,19 @@ dependencies:
   - pip
   - python>=3.8
   - nbconvert
-  - r-tibble
-  - r-httr
-  - r-tidyr
-  - r-dplyr
-  - r-purrr
-  - r-xml2
-  - r-glue
-  - r-stringr
-  - r-cli
-  - r-SecretsProvider
-  - r-jsonlite
   - r-lubridate
-  - r-aws.s3
+  - r-stringr
+  - r-jsonlite
+  - r-dplyr
+  - r-glue
   - r-magrittr
+  - r-purrr
+  - r-aws.s3
+  - r-tidyr
+  - r-tibble
+  - r-SecretsProvider
+  - r-httr
+  - r-cli
+  - r-xml2
   - papermill
   - ipykernel
